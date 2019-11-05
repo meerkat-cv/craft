@@ -6,7 +6,24 @@ MIT License
 # -*- coding: utf-8 -*-
 import numpy as np
 from skimage import io
+from skimage.util import img_as_ubyte
 import cv2
+
+
+def loadImageFromOpenCV(cv_image):
+    image = cv_image[:, :, ::-1]
+    image = img_as_ubyte(image)
+    if image.shape[0] == 2:
+        image = image[0]
+    if len(image.shape) == 2:
+        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+    if image.shape[2] == 4:
+        image = image[:, :, :3]
+    image = np.array(image)
+
+    return image
+
+
 
 def loadImage(img_file):
     img = io.imread(img_file)           # RGB order
