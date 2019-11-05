@@ -44,7 +44,7 @@ class CraftDetector:
         self.net.eval()
 
 
-    def test_net(self, image, text_threshold=0.7, link_threshold=0.4, low_text=0.4, poly=False, refine_net=None):
+    def detect(self, image, text_threshold=0.7, link_threshold=0.4, low_text=0.4, poly=False, refine_net=None):
         t0 = time.time()
 
         # image = image[:, :, ::-1]
@@ -63,7 +63,7 @@ class CraftDetector:
         if self.using_gpu:
             canvas_size = 1280
         else:
-            canvas_size = 640
+            canvas_size = 896
         img_resized, target_ratio, size_heatmap = resize_aspect_ratio(
             image, canvas_size, interpolation=cv2.INTER_LINEAR, mag_ratio=mag_ratio)
         ratio_h = ratio_w = 1 / target_ratio
