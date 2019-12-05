@@ -51,12 +51,11 @@ class CraftDetector:
 
             # resize
             mag_ratio = 50
-            canvas_size = 2100
-            # if self.using_gpu:
-            # mag_ratio = 50.0
-            # canvas_size = 2800
-            # else:
-            #     canvas_size = 896
+            if self.using_gpu:
+                canvas_size = 2100
+            else:
+                canvas_size = 1280
+            
             img_resized, target_ratio, size_heatmap = resize_aspect_ratio(
                 image, canvas_size, interpolation=cv2.INTER_AREA, mag_ratio=mag_ratio)
             ratio_h = ratio_w = 1 / target_ratio
