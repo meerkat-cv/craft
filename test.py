@@ -98,7 +98,10 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, r
     t1 = time.time()
 
     # Post-processing
-    boxes, polys = craft_utils.getDetBoxes(score_text, score_link, text_threshold, link_threshold, low_text, poly)
+    boxes, polys, _ = craft_utils.getDetBoxes(
+        img_resized, score_text, score_link, text_threshold,
+        link_threshold, low_text, poly,
+    )
 
     # coordinate adjustment
     boxes = craft_utils.adjustResultCoordinates(boxes, ratio_w, ratio_h)
