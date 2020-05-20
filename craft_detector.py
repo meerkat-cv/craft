@@ -44,7 +44,8 @@ class CraftDetector:
         self.net.eval()
 
 
-    def detect(self, image, text_threshold=0.7, link_threshold=0.4, low_text=0.4, poly=False, refine_net=None):
+    def detect(self, image, text_threshold=0.7, link_threshold=0.4, low_text=0.4,
+            poly=False, refine_net=None, char_box=False):
         with torch.no_grad():
             t0 = time.time()
             image = loadImageFromOpenCV(image)
@@ -84,11 +85,16 @@ class CraftDetector:
             t1 = time.time()
 
             # Post-processing
-            boxes, polys = getDetBoxes(score_text, score_link, text_threshold, link_threshold, low_text, poly)
+            boxes, polys, char_boxes = getDetBoxes(
+                img_resized, score_text, score_link, text_threshold,
+                link_threshold, low_text, poly, char_box,
+            )
 
             # coordinate adjustment
             boxes = adjustResultCoordinates(boxes, ratio_w, ratio_h)
             polys = adjustResultCoordinates(polys, ratio_w, ratio_h)
+            char_boxes = adjustResultCoordinates(char_boxes, ratio_w, ratio_h)
+
             for k in range(len(polys)):
                 if polys[k] is None:
                     polys[k] = boxes[k]
@@ -97,4 +103,4 @@ class CraftDetector:
 
             logging.debug("\ninfer/postproc time : {:.3f}/{:.3f}".format(t0, t1))
 
-            return boxes, polys #, ret_score_text
+            return boxes, polys, char_boxes  #, ret_score_text
