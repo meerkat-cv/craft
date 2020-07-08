@@ -96,5 +96,6 @@ class CraftDetector:
             t1 = time.time() - t1
 
             logging.debug("\ninfer/postproc time : {:.3f}/{:.3f}".format(t0, t1))
+            torch.cuda.empty_cache()
 
             return boxes, polys #, ret_score_text
