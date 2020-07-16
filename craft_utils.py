@@ -32,6 +32,7 @@ def getCharBoxes(image, textmap):
     image = cv2.resize(image, textmap.shape[::-1], cv2.INTER_CUBIC)
     cv2.watershed((image * 255).astype(np.uint8), markers)
     num_classes = np.max(markers)
+    out_boxes = np.zeros((num_classes+1)*4, dtype=np.int32)
 
     # marker 1 is background
     find_boxes(markers, out_boxes)
