@@ -7,6 +7,7 @@ MIT License
 import numpy as np
 import cv2
 import math
+from .fast_helpers.fast_helpers import find_boxes
 
 """ auxilary functions """
 # unwarp corodinates
@@ -30,11 +31,15 @@ def getCharBoxes(image, textmap):
     markers[unknown == 255] = 0
     image = cv2.resize(image, textmap.shape[::-1], cv2.INTER_CUBIC)
     cv2.watershed((image * 255).astype(np.uint8), markers)
+    num_classes = np.max(markers)
+    out_boxes = np.zeros((num_classes+1)*4, dtype=np.int32)
 
     # marker 1 is background
-    for i in range(2, np.max(markers) + 1):
-        np_contours = np.roll(np.array(np.where(markers == i)), 1, axis=0).transpose().reshape(-1, 2)
-        l, t, w, h = cv2.boundingRect(np_contours)
+    find_boxes(markers, out_boxes)
+    for idx in range(2,num_classes+1):
+        l,t = out_boxes[idx*4+0], out_boxes[idx*4+1]
+        r,b = out_boxes[idx*4+2], out_boxes[idx*4+3]
+        w, h = r-l, b-t
         box = np.array([[l, t], [l + w, t], [l + w, t + h], [l, t + h]], dtype=np.float32)
         char_boxes.append(box)
 
