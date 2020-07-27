@@ -44,18 +44,17 @@ class CraftDetector:
         self.net.eval()
 
 
-    def detect(self, image, text_threshold=0.7, link_threshold=0.4, low_text=0.4,
+    def detect(self, image, 
+            canvas_size=1280, canvas_size_gpu=2100, mag_ratio=50, 
+            text_threshold=0.7, link_threshold=0.4, low_text=0.4,
             poly=False, refine_net=None, char_box=False):
         with torch.no_grad():
             t0 = time.time()
             image = loadImageFromOpenCV(image)
 
             # resize
-            mag_ratio = 50
             if self.using_gpu:
-                canvas_size = 2100
-            else:
-                canvas_size = 1280
+                canvas_size = canvas_size_gpu
             
             img_resized, target_ratio, size_heatmap = resize_aspect_ratio(
                 image, canvas_size, interpolation=cv2.INTER_AREA, mag_ratio=mag_ratio)
