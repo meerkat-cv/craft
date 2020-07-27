@@ -2,7 +2,7 @@ import ctypes
 import numpy as np
 from numpy.ctypeslib import ndpointer
 
-lib = ctypes.CDLL('/code/libs/craft/fast_helpers/build/libfast_helpers.so')
+lib = ctypes.CDLL('/libs/fast_helpers/build/libfast_helpers.so')
 
 c_find_boxes = lib.find_boxes
 c_find_boxes.argtypes = [
