@@ -7,6 +7,7 @@ MIT License
 import numpy as np
 import cv2
 import math
+from .fast_helpers.fast_helpers import find_boxes
 
 """ auxilary functions """
 # unwarp corodinates
@@ -14,6 +15,35 @@ def warpCoord(Minv, pt):
     out = np.matmul(Minv, (pt[0], pt[1], 1))
     return np.array([out[0]/out[2], out[1]/out[2]])
 """ end of auxilary functions """
+
+
+def getCharBoxes(image, textmap):
+    char_boxes = []
+    ret, sure_fg = cv2.threshold(textmap, 0.6, 1, 0)
+    ret, sure_bg = cv2.threshold(textmap, 0.2, 1, 0)
+
+    sure_fg = np.uint8(sure_fg * 255)
+    sure_bg = np.uint8(sure_bg * 255)
+
+    unknown = cv2.subtract(sure_bg, sure_fg)
+    ret, markers = cv2.connectedComponents(sure_fg)
+    markers = markers + 1
+    markers[unknown == 255] = 0
+    image = cv2.resize(image, textmap.shape[::-1], cv2.INTER_CUBIC)
+    cv2.watershed((image * 255).astype(np.uint8), markers)
+    num_classes = np.max(markers)
+    out_boxes = np.zeros((num_classes+1)*4, dtype=np.int32)
+
+    # marker 1 is background
+    find_boxes(markers, out_boxes)
+    for idx in range(2,num_classes+1):
+        l,t = out_boxes[idx*4+0], out_boxes[idx*4+1]
+        r,b = out_boxes[idx*4+2], out_boxes[idx*4+3]
+        w, h = r-l, b-t
+        box = np.array([[l, t], [l + w, t], [l + w, t + h], [l, t + h]], dtype=np.float32)
+        char_boxes.append(box)
+
+    return char_boxes
 
 
 def getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text):
@@ -27,7 +57,8 @@ def getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text)
     ret, link_score = cv2.threshold(linkmap, link_threshold, 1, 0)
 
     text_score_comb = np.clip(text_score + link_score, 0, 1)
-    nLabels, labels, stats, centroids = cv2.connectedComponentsWithStats(text_score_comb.astype(np.uint8), connectivity=4)
+    nLabels, labels, stats, centroids = cv2.connectedComponentsWithStats(
+        text_score_comb.astype(np.uint8), connectivity=4)
 
     det = []
     mapper = []
@@ -224,15 +255,21 @@ def getPoly_core(boxes, labels, mapper, linkmap):
 
     return polys
 
-def getDetBoxes(textmap, linkmap, text_threshold, link_threshold, low_text, poly=False):
+def getDetBoxes(image, textmap, linkmap, text_threshold, link_threshold,
+        low_text, poly=False, char_box=False):
     boxes, labels, mapper = getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text)
+
+    if char_box:
+        char_boxes = getCharBoxes(image, textmap)
+    else:
+        char_boxes = []
 
     if poly:
         polys = getPoly_core(boxes, labels, mapper, linkmap)
     else:
         polys = [None] * len(boxes)
 
-    return boxes, polys
+    return boxes, polys, char_boxes
 
 def adjustResultCoordinates(polys, ratio_w, ratio_h, ratio_net = 2):
     if len(polys) > 0:
